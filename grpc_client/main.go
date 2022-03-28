@@ -12,7 +12,6 @@ import (
 const port = ":5001"
 
 func main() {
-
 	conn, err := grpc.Dial("localhost"+port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalln(err.Error())
