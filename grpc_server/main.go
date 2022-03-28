@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -29,8 +30,13 @@ type employeeService struct {
 }
 
 func (e employeeService) GetByNo(ctx context.Context, request *pb.GetByNoRequest) (*pb.EmployeeResponse, error) {
-	//TODO implement me
-	panic("implement me")
+
+	for _, each := range employees {
+		if each.No == request.No {
+			return &pb.EmployeeResponse{Employee: &each}, nil
+		}
+	}
+	return nil, errors.New("employee not found")
 }
 
 func (e employeeService) GetAll(request *pb.GetAllRequest, server pb.EmployeeService_GetAllServer) error {
