@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"grpc_server/pb"
+	"io"
 	"log"
 	"net"
 )
@@ -40,13 +42,39 @@ func (e employeeService) GetByNo(ctx context.Context, request *pb.GetByNoRequest
 }
 
 func (e employeeService) GetAll(request *pb.GetAllRequest, server pb.EmployeeService_GetAllServer) error {
-	//TODO implement me
-	panic("implement me")
+	for _, each := range employees {
+		server.Send(&pb.EmployeeResponse{
+			Employee: &each,
+		})
+	}
+
+	return nil
 }
 
 func (e employeeService) AddPhoto(server pb.EmployeeService_AddPhotoServer) error {
-	//TODO implement me
-	panic("implement me")
+	md, ok := metadata.FromIncomingContext(server.Context())
+	if ok {
+		fmt.Printf("Employee: %s\n", md["no"][0])
+	}
+
+	img := []byte{}
+	for {
+		data, err := server.Recv()
+		if err == io.EOF {
+			fmt.Printf("File Size:%d \n", len(img))
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("File received %d", len(data.Data))
+		img = append(img, data.Data...)
+		fmt.Println(data.Data)
+		fmt.Println("========================")
+	}
+
+	return nil
 }
 
 func (e employeeService) Save(ctx context.Context, request *pb.EmployeeRequest) (*pb.EmployeeResponse, error) {
@@ -55,6 +83,22 @@ func (e employeeService) Save(ctx context.Context, request *pb.EmployeeRequest) 
 }
 
 func (e employeeService) SaveAll(server pb.EmployeeService_SaveAllServer) error {
-	//TODO implement me
-	panic("implement me")
+	for {
+		req, err := server.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		employees = append(employees, *req.Employee)
+		server.Send(&pb.EmployeeResponse{Employee: req.Employee})
+	}
+
+	for _, each := range employees {
+		fmt.Println(each)
+	}
+
+	return nil
 }
